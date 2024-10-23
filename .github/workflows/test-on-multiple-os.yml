@@ -1,4 +1,4 @@
-name: CI Test Workflow
+name: CI Test Workflow for Multiple OS
 
 # Trigger the workflow on push, pull request, or commit to the repository
 on:
