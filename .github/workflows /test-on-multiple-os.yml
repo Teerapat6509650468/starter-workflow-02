@@ -1,0 +1,58 @@
+name: CI Test Workflow on Multiple OS
+
+# Trigger the workflow on push, pull request, or commit to the repository
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-on-multiple-os:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, centos]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Setup Node.js on Ubuntu and Windows
+      - name: Setup Node.js on Ubuntu/Windows
+        if: matrix.os != 'centos'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      # Use Docker for CentOS as GitHub Actions does not directly support it
+      - name: Set up CentOS environment
+        if: matrix.os == 'centos'
+        run: |
+          docker run -v ${{ github.workspace }}:/workspace -w /workspace node:16-bullseye bash -c "
+          apt-get update && apt-get install -y curl
+          curl -fsSL https://rpm.nodesource.com/setup_16.x | bash -
+          yum install -y nodejs && npm install && npm test
+          "
+
+      # Install dependencies for Ubuntu and Windows
+      - name: Install Dependencies on Ubuntu/Windows
+        if: matrix.os != 'centos'
+        run: npm install
+
+      # Run Tests for Ubuntu and Windows
+      - name: Run Tests on Ubuntu/Windows
+        if: matrix.os != 'centos'
+        run: npm test
+
+      # Debugging step to gather logs if the test fails
+      - name: Debugging logs
+        if: failure()
+        run: |
+          echo "OS: ${{ matrix.os }}"
+          echo "Node.js Version:"
+          node -v
+          echo "NPM Version:"
+          npm -v
+          echo "Installed dependencies:"
+          npm ls
