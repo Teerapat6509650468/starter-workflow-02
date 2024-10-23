@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-on-multiple-os-and-node-versions:
+  test-on:
     runs-on: ${{ matrix.os }}
 
     strategy:
